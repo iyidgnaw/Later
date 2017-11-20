@@ -1,0 +1,25 @@
+(lp0
+ccopy_reg
+_reconstructor
+p1
+(ccommon
+LaterTask
+p2
+c__builtin__
+object
+p3
+Ntp4
+Rp5
+(dp6
+S'content'
+p7
+S'test task'
+p8
+sS'task_id'
+p9
+I1
+sS'time'
+p10
+S'at 5 mins later'
+p11
+sba.
