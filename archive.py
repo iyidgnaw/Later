@@ -6,10 +6,9 @@
 import pickle
 import sys
 
+from util import add_to_list 
+ARCHIVE = './archive_list'
+
 if __name__ == '__main__':
     task_content = " ".join(sys.argv[1:])
-    with open('archive_list', 'rb') as source:
-        archive_list = pickle.load(source)
-    archive_list.append(task_content)
-    with open('archive_list', 'wb') as source:
-        pickle.dump(archive_list, source)
+    add_to_list(task_content, ARCHIVE)

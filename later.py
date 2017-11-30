@@ -1,12 +1,19 @@
 #! /usr/bin/env python
-import argparse 
+"""Later APP"""
+# pylint: disable=C0103
+import argparse
 import pickle
 import subprocess
 import sys
 
+from util import LaterTask, load_from_file, save_to_file
+
 TASK_LIST = './later_task_list'
 ARCHIVE = './archive_list'
-def parserCmd(argv):
+###############################################################################
+# Main
+###############################################################################
+def parse_command(argv):
     """Argparser function.
 
        {ls, new, delete}
@@ -38,46 +45,38 @@ def parserCmd(argv):
     return args
 
 
+def main(argv):
+    """Main function
+
+       Parse the command line input and call corresponding handler function.
+    """
+    args = parse_command(argv)
+    if args.cmd == 'ls':
+        listAll(args.archive)
+
+    elif args.cmd == 'new':
+        createNewTask()
+    #TODO: Add a reset function with double check
+###############################################################################
+# Handler Function
+###############################################################################
 def listAll(archive=False):
     """Print everything in queue."""
     if archive:
         with open('archive_list', 'rb') as source:
             lst = pickle.load(source)
         print 'Good job! You have finished {} tasks'.format(len(lst))
-        for i,c in enumerate(lst, 1):
-            print i,c
+        for i, c in enumerate(lst, 1):
+            print i, c
     else:
         with open('later_task_list', 'rb') as source:
             lst = pickle.load(source)
         if not len(lst):
             print 'Bingo! No task pending right now. Enjoy your life.'
-            return 
+            return
         print 'You gotta do:'
         for task in lst:
             print task
-
-
-def scheduleTask(user_option, task_content):
-    """Schedule task and return the at output.
-
-       Schedule a task using at command.
-    """
-    # TODO: Delete option 0 after test.
-    legal_options = {0: 'now + 1 minute',
-                     1: 'now + 2 hour',
-                     2: 'tomorrow',
-                     3: 'noon tomorrow',
-                     4: '8:00 PM tomorrow'}
-    cmd = './notify.sh,{},{},{}'
-    task_cmd = cmd.format(legal_options[user_option], task_content, 'Diyi')
-    proc = subprocess.Popen(task_cmd.split(','),
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE)
-    _, stderr = proc.communicate()
-    info = stderr.split('\n')[1].split()
-    job_id = int(info[1])
-    schedule_time = " ".join(info[2:])
-    return job_id, schedule_time
 
 
 def createNewTask():
@@ -112,14 +111,34 @@ def createNewTask():
     #TODO: Create an LaterTask object and put it in the queue.
     print('[{}] will be scheduled at {}'.format(task_content,
                                                 schedule_time))
-    task_list = pickle.load(TASK_LIST)
+    task_list = load_from_file(TASK_LIST)
+    newTask = LaterTask(task_id, schedule_time, task_content)
+    task_list.append(newTask)
+    save_to_file(task_list, TASK_LIST)
+###############################################################################
+# Helper function
+###############################################################################
+def scheduleTask(user_option, task_content):
+    """Schedule task and return the at output.
 
-
+       Schedule a task using at command.
+    """
+    # TODO: Delete option 0 after test.
+    legal_options = {0: 'now + 1 minute',
+                     1: 'now + 2 hour',
+                     2: 'tomorrow',
+                     3: 'noon tomorrow',
+                     4: '8:00 PM tomorrow'}
+    cmd = './notify.sh,{},{},{}'
+    task_cmd = cmd.format(legal_options[user_option], task_content, 'Diyi')
+    proc = subprocess.Popen(task_cmd.split(','),
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
+    _, stderr = proc.communicate()
+    info = stderr.split('\n')[1].split()
+    job_id = int(info[1])
+    schedule_time = " ".join(info[2:])
+    return job_id, schedule_time
+###############################################################################
 if __name__ == '__main__':
-    args = parserCmd(sys.argv)
-    if args.cmd == 'ls':
-        listAll(args.archive)
-
-    elif args.cmd == 'new':
-        createNewTask()
-    #TODO: Add a reset function with double check
+    main(sys.argv)
